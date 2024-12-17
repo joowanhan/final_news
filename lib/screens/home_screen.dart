@@ -27,9 +27,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "News",
+          "Business News",
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 30,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
+      backgroundColor: Colors.white.withOpacity(0.95),
       body: _buildUI(),
     );
   }
@@ -45,27 +51,36 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: articles.length,
       itemBuilder: (context, index) {
         final article = articles[index];
-        return ListTile(
-          onTap: () {
-            _launchUrl(
-              Uri.parse(article.url ?? ""),
-            );
-          },
-          leading: Image.network(
-            article.urlToImage ?? PLACEHOLDER_IMAGE_LINK,
-            height: 250,
-            width: 100,
-            fit: BoxFit.cover,
-            // ListTile의 Image.network에서 이미지 URL이 잘못된 경우를 대비한 errorBuilder를 추가
-            errorBuilder: (context, error, stackTrace) {
-              return Image.network(PLACEHOLDER_IMAGE_LINK, fit: BoxFit.cover);
+        return Card(
+          color: Colors.white.withOpacity(0.95),
+          elevation: 4.0, // 음영 추가
+          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          child: ListTile(
+            onTap: () {
+              _launchUrl(
+                Uri.parse(article.url ?? ""),
+              );
             },
-          ),
-          title: Text(
-            article.title ?? "",
-          ),
-          subtitle: Text(
-            article.publishedAt ?? "",
+            leading: Image.network(
+              article.urlToImage ?? PLACEHOLDER_IMAGE_LINK,
+              height: 250,
+              width: 100,
+              fit: BoxFit.cover,
+              // ListTile의 Image.network에서 이미지 URL이 잘못된 경우를 대비한 errorBuilder를 추가
+              errorBuilder: (context, error, stackTrace) {
+                return Image.network(PLACEHOLDER_IMAGE_LINK, fit: BoxFit.cover);
+              },
+            ),
+            title: Text(
+              article.title ?? "",
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            subtitle: Text(
+              article.publishedAt ?? "",
+            ),
           ),
         );
       },
@@ -75,7 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _getNews() async {
     try {
       final response = await dio.get(
-        'https://newsapi.org/v2/top-headlines?country=us&apiKey=$NEWS_API_KEY',
+        // 'https://newsapi.org/v2/top-headlines?country=us&apiKey=$NEWS_API_KEY',
+        'https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=$NEWS_API_KEY',
       );
       final articlesJson = response.data["articles"] as List;
       setState(() {
