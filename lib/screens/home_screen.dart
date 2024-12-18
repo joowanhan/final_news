@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/consts.dart';
+import 'package:news_app/services/api_service.dart'; // ApiService 불러오기
 import 'package:url_launcher/url_launcher.dart';
 import '../models/news_model.dart';
 
@@ -12,14 +12,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Dio dio = Dio();
-
+  final ApiService apiService = ApiService(); // ApiService 인스턴스 생성
   List<NewsModel> articles = [];
 
   @override
   void initState() {
     super.initState();
-    _getNews();
+    _getNews(); // 뉴스 데이터를 가져오기
   }
 
   @override
@@ -41,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildUI() {
-    // 뉴스 데이터를 가져오는 동안 로딩 인디케이터를 표시
+    // 뉴스 데이터를 가져오는 동안 로딩 인디케이터 표시
     if (articles.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -66,7 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 250,
               width: 100,
               fit: BoxFit.cover,
-              // ListTile의 Image.network에서 이미지 URL이 잘못된 경우를 대비한 errorBuilder를 추가
               errorBuilder: (context, error, stackTrace) {
                 return Image.network(PLACEHOLDER_IMAGE_LINK, fit: BoxFit.cover);
               },
@@ -79,7 +77,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             subtitle: Text(
-              article.publishedAt ?? "",
+              article.publishedAt != null
+                  ? DateTime.parse(article.publishedAt!)
+                      .toLocal()
+                      .toString()
+                      .substring(0, 16)
+                  : "",
             ),
           ),
         );
@@ -88,25 +91,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _getNews() async {
-    try {
-      final response = await dio.get(
-        // 'https://newsapi.org/v2/top-headlines?country=us&apiKey=$NEWS_API_KEY',
-        'https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=$NEWS_API_KEY',
-      );
-      final articlesJson = response.data["articles"] as List;
-      setState(() {
-        List<NewsModel> newsArticle =
-            articlesJson.map((a) => NewsModel.fromJson(a)).toList();
-        newsArticle = newsArticle.where((a) => a.title != "[Removed]").toList();
-        articles = newsArticle;
-      });
-    } catch (e) {
-      // 네트워크 오류를 대비한 예외 처리
-      // 오류 메시지 출력 및 스낵바 표시
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("뉴스를 불러오는 중 오류가 발생했습니다.")),
-      );
-    }
+    // ApiService를 사용하여 뉴스 데이터를 가져옴
+    List<NewsModel> fetchedArticles = await apiService.fetchNews();
+    setState(() {
+      articles = fetchedArticles; // 상태 업데이트
+    });
   }
 
   Future<void> _launchUrl(Uri url) async {
